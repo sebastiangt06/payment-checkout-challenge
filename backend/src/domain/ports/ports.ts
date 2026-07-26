@@ -7,20 +7,20 @@ export const PRODUCT_REPOSITORY_PORT = Symbol('PRODUCT_REPOSITORY_PORT');
 export const TRANSACTION_REPOSITORY_PORT = Symbol('TRANSACTION_REPOSITORY_PORT');
 export const PAYMENT_GATEWAY_PORT = Symbol('PAYMENT_GATEWAY_PORT');
 
-export interface ProductRepositoryPort {
-  findAll(): Promise<Product[]>;
-  findById(id: string): Promise<Product | null>;
-  decrementStock(productId: string, quantity: number): Promise<boolean>;
+export abstract class ProductRepositoryPort {
+  abstract findAll(): Promise<Product[]>;
+  abstract findById(id: string): Promise<Product | null>;
+  abstract decrementStock(productId: string, quantity: number): Promise<boolean>;
 }
 
-export interface TransactionRepositoryPort {
-  save(transaction: Transaction): Promise<Transaction>;
-  findById(id: string): Promise<Transaction | null>;
-  update(transaction: Transaction): Promise<Transaction>;
+export abstract class TransactionRepositoryPort {
+  abstract save(transaction: Transaction): Promise<Transaction>;
+  abstract findById(id: string): Promise<Transaction | null>;
+  abstract update(transaction: Transaction): Promise<Transaction>;
 }
 
-export interface PaymentGatewayPort {
-  createPayment(params: {
+export abstract class PaymentGatewayPort {
+  abstract createPayment(params: {
     amountInCents: number;
     currency: string;
     customerEmail: string;
