@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Result } from '../../shared/result';
-import {Transaction} from '../models/Transaction';
-import {CustomerData} from '../models/CustomerData';
-import {DeliveryData} from '../models/DeliveryData';
+import { Result } from '@/shared/result';
+import {Transaction} from '@/domain/models/Transaction';
+import {CustomerData} from '@/domain/models/CustomerData';
+import {DeliveryData} from '@/domain/models/DeliveryData';
 import {
   PRODUCT_REPOSITORY_PORT,
   ProductRepositoryPort,

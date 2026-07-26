@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { Result } from '../../shared/result';
-import { PaymentGatewayPort } from '../../domain/ports/ports';
+import { Result } from '@/shared/result';
+import { PaymentGatewayPort } from '@/domain/ports/ports';
 
 @Injectable()
 export class PaymentAdapter implements PaymentGatewayPort {

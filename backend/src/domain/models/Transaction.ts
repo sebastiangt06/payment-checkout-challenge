@@ -1,6 +1,6 @@
-import {TransactionStatus} from './TransactionStatus';
-import {CustomerData} from './CustomerData';
-import {DeliveryData} from './DeliveryData';
+import {TransactionStatus} from '@/domain/models/TransactionStatus';
+import {CustomerData} from '@/domain/models/CustomerData';
+import {DeliveryData} from '@/domain/models/DeliveryData';
 
 export class Transaction {
   constructor(
