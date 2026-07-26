@@ -1,6 +1,6 @@
-import {Product} from '../models/Product';
-import {Transaction} from '../models/Transaction';
-import { Result } from '../../shared/result';
+import {Product} from '@/domain/models/Product';
+import {Transaction} from '@/domain/models/Transaction';
+import { Result } from '@/shared/result';
 
 // Tokens para Inyección de Dependencias en NestJS
 export const PRODUCT_REPOSITORY_PORT = Symbol('PRODUCT_REPOSITORY_PORT');

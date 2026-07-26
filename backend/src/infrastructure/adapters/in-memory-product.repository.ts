@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {Product} from '../../domain/models/Product';
-import { ProductRepositoryPort } from '../../domain/ports/ports';
+import {Product} from '@/domain/models/Product';
+import { ProductRepositoryPort } from '@/domain/ports/ports';
 
 @Injectable()
 export class InMemoryProductRepository implements ProductRepositoryPort {

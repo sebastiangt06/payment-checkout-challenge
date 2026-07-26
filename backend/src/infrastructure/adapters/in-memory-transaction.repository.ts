@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {Transaction} from '../../domain/models/Transaction';
-import { TransactionRepositoryPort } from '../../domain/ports/ports';
+import {Transaction} from '@/domain/models/Transaction';
+import { TransactionRepositoryPort } from '@/domain/ports/ports';
 
 @Injectable()
 export class InMemoryTransactionRepository implements TransactionRepositoryPort {

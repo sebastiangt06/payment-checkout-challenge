@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Result } from '../../shared/result';
-import {Transaction } from '../models/Transaction';
+import { Result } from '@/shared/result';
+import {Transaction } from '@/domain/models/Transaction';
 
 import {
   TRANSACTION_REPOSITORY_PORT,
