@@ -6,15 +6,14 @@ import { PaymentGatewayPort } from '@/domain/ports/ports';
 
 @Injectable()
 export class PaymentAdapter implements PaymentGatewayPort {
-  private baseURL: string | undefined | '';
-  private publicKey?: string;
-  private privateKey?: string;
+  private baseURL: string;
+  private publicKey: string;
+  private privateKey: string;
 
   constructor(private readonly httpService: HttpService) {
-    this.baseURL =
-      process.env.UAT_URL ;
-    this.publicKey = process.env.PUBLIC_KEY;
-    this.privateKey = process.env.PRIVATE_KEY;
+    this.baseURL = process.env.UAT_URL || 'https://sandbox.wompi.co/v1';
+    this.publicKey = process.env.PUBLIC_KEY || '';
+    this.privateKey = process.env.PRIVATE_KEY || '';
   }
 
   private async getAcceptanceToken(): Promise<string> {
@@ -24,7 +23,7 @@ export class PaymentAdapter implements PaymentGatewayPort {
       );
       return response.data.data.presigned_acceptance.acceptance_token;
     } catch (error) {
-      throw new Error('No se pudo obtener el token de aceptación.');
+      throw new Error('No se pudo obtener el token de aceptación de Wompi.');
     }
   }
 
@@ -62,24 +61,28 @@ export class PaymentAdapter implements PaymentGatewayPort {
       );
 
       const txData = response.data.data;
-      if (txData.status === 'APPROVED' || txData.status === 'PENDING') {
-        return Result.ok(txData);
-      } else {
-        return Result.fail(
-          `Transacción rechazada: ${txData.status_message || 'Fondos insuficientes o tarjeta inválida.'}`,
-        );
-      }
+
+      // Devuelve la respuesta completa de Wompi para que el caso de uso lea el estado real ('APPROVED', 'DECLINED', etc.)
+      return Result.ok(txData);
     } catch (error: any) {
+      // 1. Manejo dinámico para entorno de desarrollo / fallback local
+      if (params.cardToken.includes('declined')) {
+        console.warn('[Sandbox Fallback] Simulando respuesta RECHAZADA por token de prueba...');
+        return Result.ok({ id: `sim-${Date.now()}`, status: 'DECLINED' });
+      }
+
       if (!error.response) {
-        console.warn(
-          '[Sandbox Fallback] Simulando respuesta aprobada en entorno local...',
-        );
+        console.warn('[Sandbox Fallback] Simulando respuesta APROBADA en entorno local...');
         return Result.ok({ id: `sim-${Date.now()}`, status: 'APPROVED' });
       }
-      return Result.fail(
+
+      // 2. Errores HTTP reales de la API de Wompi
+      const errorMessage =
         error.response?.data?.error?.messages?.card_number ||
-          'Error de conexión con la pasarela.',
-      );
+        error.response?.data?.error?.reason ||
+        'Error de comunicación con la pasarela de pagos.';
+
+      return Result.fail(errorMessage);
     }
   }
 }

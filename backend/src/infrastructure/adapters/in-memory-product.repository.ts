@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {Product} from '@/domain/models/Product';
 import { ProductRepositoryPort } from '@/domain/ports/ports';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class InMemoryProductRepository implements ProductRepositoryPort {
@@ -12,14 +13,14 @@ export class InMemoryProductRepository implements ProductRepositoryPort {
 
   private seedProducts(): void {
     const p1 = new Product(
-      'prod-1',
+      randomUUID(),
       'CF MOTO 450NK Scale Model & Gear',
       'Modelo a escala oficial + Kit de mantenimiento técnico de alta precisión.',
       185000,
       5,
     );
     const p2 = new Product(
-      'prod-2',
+      randomUUID(),
       'Teclado Mecánico RGB Pro',
       'Teclado mecánico switches red ideal para administración de servidores.',
       240000,

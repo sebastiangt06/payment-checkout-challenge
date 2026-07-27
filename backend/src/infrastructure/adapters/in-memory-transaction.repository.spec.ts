@@ -1,15 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateTransactionUseCase } from '@/domain/use-cases/create-transaction.use-case';
-import {
-  PRODUCT_REPOSITORY_PORT,
-  TRANSACTION_REPOSITORY_PORT,
-} from '@/domain/ports/ports';
+import { PRODUCT_REPOSITORY_PORT, TRANSACTION_REPOSITORY_PORT } from '@/domain/ports/ports';
 import { InMemoryProductRepository } from '@/infrastructure/adapters/in-memory-product.repository';
 import { InMemoryTransactionRepository } from '@/infrastructure/adapters/in-memory-transaction.repository';
 
-describe('CreateTransactionUseCase', () => {
+describe('InMemoryTransactionRepository Integration', () => {
   let useCase: CreateTransactionUseCase;
   let productRepo: InMemoryProductRepository;
+  let testProductId: string;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,36 +25,34 @@ describe('CreateTransactionUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateTransactionUseCase>(CreateTransactionUseCase);
-    productRepo = module.get<InMemoryProductRepository>(
-      PRODUCT_REPOSITORY_PORT,
-    );
+    productRepo = module.get<InMemoryProductRepository>(PRODUCT_REPOSITORY_PORT);
+
+    // Obtenemos un ID aleatorio real de la semilla
+    const products = await productRepo.findAll();
+    testProductId = products[0].id;
   });
 
-  const validCommand = {
-    productId: 'prod-1',
+  const getValidCommand = () => ({
+    productId: testProductId,
     customerData: { name: 'Koby Cleves', email: 'koby@example.com' },
-    deliveryData: {
-      address: 'Calle Falsa 123',
-      city: 'Cali',
-      phone: '3001234567',
-    },
-  };
+    deliveryData: { address: 'Calle Falsa 123', city: 'Cali', phone: '3001234567' },
+  });
 
-  it('debe crear una transacción en estado PENDING y agregar la tarifa base fija[cite: 2]', async () => {
-    const result = await useCase.execute(validCommand);
+  it('debe crear una transacción en estado PENDING y agregar la tarifa base fija', async () => {
+    const result = await useCase.execute(getValidCommand());
 
     expect(result.isSuccess).toBe(true);
     const transaction = result.getValue();
-    expect(transaction.status).toBe('PENDING'); // Paso 5.1[cite: 2]
-    expect(transaction.baseFee).toBe(2500); // Tarifa base fija obligatoria[cite: 2]
+    expect(transaction.status).toBe('PENDING');
+    expect(transaction.baseFee).toBe(2500);
     expect(transaction.deliveryFee).toBe(10000);
     expect(transaction.reference).toContain('TX-');
   });
 
   it('debe fallar si el producto no existe en la base de datos', async () => {
     const result = await useCase.execute({
-      ...validCommand,
-      productId: 'producto-inexistente',
+      ...getValidCommand(),
+      productId: '00000000-0000-0000-0000-000000000000',
     });
 
     expect(result.isFailure).toBe(true);
@@ -64,13 +60,11 @@ describe('CreateTransactionUseCase', () => {
   });
 
   it('debe fallar si el producto se quedó sin stock disponible', async () => {
-    // Vaciamos el stock manualmente para la prueba
-    await productRepo.decrementStock('prod-1', 5);
+    // Vaciamos el stock del producto dinámico para la prueba
+    await productRepo.decrementStock(testProductId, 5);
 
-    const result = await useCase.execute(validCommand);
+    const result = await useCase.execute(getValidCommand());
     expect(result.isFailure).toBe(true);
-
-    // Cambiar .toBe('Producto sin stock disponible.') por .toContain:
     expect(result.error).toContain('Stock insuficiente');
   });
 });
