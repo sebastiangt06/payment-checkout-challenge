@@ -142,9 +142,27 @@ Variables requeridas en `.env`:
 
 ```env
 PORT=3000
+
+# Base de datos PostgreSQL
+# En local puedes usar DATABASE_URL o las variables sueltas de abajo.
 DATABASE_URL=postgres://usuario:password@localhost:5432/checkout_db
+
+# Alternativa: conexión por variables individuales (ej. AWS RDS en producción)
+DB_HOST=<tu-host-rds>.rds.amazonaws.com
+DB_PORT=5432
+DB_USER=<db-user>
+DB_PASSWORD=<db-password>
+DB_NAME=postgres
+DB_SSL=true
+
+# Si es true, usa repositorios en memoria en vez de PostgreSQL (útil para tests/demo)
+USE_IN_MEMORY=false
+
+# Credenciales Sandbox Wompi (obtenidas desde el dashboard sandbox del proveedor)
 GATEWAY_API_URL=https://api-sandbox.co.uat.wompi.dev/v1
+GATEWAY_PUBLIC_KEY=pub_stagtest_xxxxxxxxxxxxxxxxxxxx
 GATEWAY_PRIVATE_KEY=prv_stagtest_xxxxxxxxxxxxxxxxxxxx
+GATEWAY_INTEGRITY_KEY=stagtest_integrity_xxxxxxxxxxxxxxxxxxxx
 ```
 
 Ejecutar migraciones, servidor y pruebas:
@@ -166,7 +184,7 @@ cp .env.example .env
 Variables requeridas en `.env`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_API_URL=http://localhost:3000/api/v1
 VITE_GATEWAY_API_URL=https://api-sandbox.co.uat.wompi.dev/v1
 VITE_GATEWAY_PUBLIC_KEY=pub_stagtest_xxxxxxxxxxxxxxxxxxxx
 ```
