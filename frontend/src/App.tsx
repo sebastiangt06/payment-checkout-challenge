@@ -1,7 +1,9 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
 import { Header } from './components/common/Header';
-import { StepProductCard } from './components/steps/StepProductCard';
+import { StepProductCard } from '@/components/steps/StepProductCard';
+import { StepCreditCardModal } from '@/components/steps/StepCreditCardModal';
+import { StepSummaryBackdrop } from '@/components/steps/StepSummaryBackdrop';
 import { useAppDispatch, useAppSelector } from './store';
 import { fetchProducts } from './store/slices/checkoutSlice';
 
@@ -20,7 +22,7 @@ export const App: React.FC = () => {
       <Header />
 
       <main className="flex-1 max-w-[375px] sm:max-w-md w-full mx-auto p-4 flex flex-col justify-center">
-        {step === 1 && (
+        {step >= 1 && (
           <>
             {loadingProducts && (
               <div className="text-center py-10">
@@ -44,6 +46,12 @@ export const App: React.FC = () => {
             )}
           </>
         )}
+
+        {/* Paso 2: Modal de Envío y Tarjeta */}
+        {step === 2 && <StepCreditCardModal />}
+
+        {/* Paso 3: Resumen de Pago en Backdrop */}
+        {step === 3 && <StepSummaryBackdrop />}
       </main>
     </div>
   );
