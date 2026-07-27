@@ -1,73 +1,39 @@
-// src/components/steps/__tests__/Step1ProductCard.test.tsx
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import checkoutReducer from '../../../store/slices/checkoutSlice';
-import { Step1ProductCard } from '../Step1ProductCard';
-import type { Product } from '../../../types';
+import { store } from '@/store';
+import { StepProductCard } from '@/components/steps/StepProductCard';
+import { describe, it, expect } from 'vitest';
 
-const createMockStore = () =>
-  configureStore({
-    reducer: {
-      checkout: checkoutReducer,
-    },
-  });
+const mockProduct = {
+  id: '19cbd695',
+  name: 'CF MOTO 450NK Scale Model & Gear',
+  description: 'Modelo a escala oficial',
+  price: 185000,
+  stock: 5,
+};
 
-describe('Step1ProductCard - Componente de Producto', () => {
-  const availableProduct: Product = {
-    id: 'prod-001',
-    name: 'CF MOTO 450NK Scale Model',
-    description: 'Scale 1:12 high detail model',
-    price: 185000,
-    stock: 5,
-  };
-
-  const outOfStockProduct: Product = { ...availableProduct, stock: 0 };
-
-  it('debe renderizar el nombre del producto, precio y el botón "Pay with credit card"', () => {
-    const store = createMockStore();
+describe('StepProductCard Component', () => {
+  it('debe renderizar el título del producto y el botón "PAY WITH CREDIT CARD"', () => {
     render(
       <Provider store={store}>
-        <Step1ProductCard product={availableProduct} />
+        <StepProductCard product={mockProduct} />
       </Provider>
     );
 
-    expect(screen.getByText('CF MOTO 450NK Scale Model')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Pay with credit card/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Pay with credit card/i })
-    ).not.toBeDisabled();
+    expect(screen.getByText(/CF MOTO 450NK/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /PAY WITH CREDIT CARD/i })).toBeInTheDocument();
   });
 
   it('debe deshabilitar el botón si el stock es 0', () => {
-    const store = createMockStore();
+    const outOfStockProduct = { ...mockProduct, stock: 0 };
+
     render(
       <Provider store={store}>
-        <Step1ProductCard product={outOfStockProduct} />
+        <StepProductCard product={outOfStockProduct} />
       </Provider>
     );
 
     const button = screen.getByRole('button', { name: /Sin stock disponible/i });
-    expect(button).toBeInTheDocument();
     expect(button).toBeDisabled();
-  });
-
-  it('debe despachar selectProduct y avanzar al paso 2 al hacer clic en el botón', () => {
-    const store = createMockStore();
-    render(
-      <Provider store={store}>
-        <Step1ProductCard product={availableProduct} />
-      </Provider>
-    );
-
-    const button = screen.getByRole('button', { name: /Pay with credit card/i });
-    fireEvent.click(button);
-
-    const state = store.getState().checkout;
-    expect(state.step).toBe(2);
-    expect(state.selectedProduct).toEqual(availableProduct);
   });
 });

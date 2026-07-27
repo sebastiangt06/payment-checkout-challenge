@@ -1,14 +1,15 @@
-// src/components/steps/__tests__/Step4TransactionStatus.test.tsx
+// src/components/steps/__tests__/StepTransactionStatus.test.tsx
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import checkoutReducer from '../../../store/slices/checkoutSlice';
-import { Step4TransactionStatus } from '../Step4TransactionStatus';
-import { checkoutApi } from '../../../api/checkoutApi';
+import checkoutReducer from '@/store/slices/checkoutSlice';
+import { StepTransactionStatus } from '@/components/steps/StepTransactionStatus';
+import { checkoutApi } from '@/api/checkoutApi';
+import { vi, describe, it, expect } from 'vitest';
 
-jest.mock('../../../api/checkoutApi');
-const mockedApi = checkoutApi as jest.Mocked<typeof checkoutApi>;
+vi.mock('@/api/checkoutApi');
+const mockedApi = vi.mocked(checkoutApi);
 
 const createMockStore = (status: 'APPROVED' | 'DECLINED') =>
   configureStore({
@@ -39,12 +40,12 @@ const createMockStore = (status: 'APPROVED' | 'DECLINED') =>
     },
   });
 
-describe('Step4TransactionStatus - Resultado del Pago', () => {
+describe('StepTransactionStatus - Resultado del Pago', () => {
   it('debe renderizar la pantalla de exito cuando la transaccion es APPROVED', () => {
     const store = createMockStore('APPROVED');
     render(
       <Provider store={store}>
-        <Step4TransactionStatus />
+        <StepTransactionStatus />
       </Provider>
     );
 
@@ -57,7 +58,7 @@ describe('Step4TransactionStatus - Resultado del Pago', () => {
     const store = createMockStore('DECLINED');
     render(
       <Provider store={store}>
-        <Step4TransactionStatus />
+        <StepTransactionStatus />
       </Provider>
     );
 
@@ -71,7 +72,7 @@ describe('Step4TransactionStatus - Resultado del Pago', () => {
 
     render(
       <Provider store={store}>
-        <Step4TransactionStatus />
+        <StepTransactionStatus />
       </Provider>
     );
 

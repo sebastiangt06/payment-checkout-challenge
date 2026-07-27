@@ -1,5 +1,5 @@
 // src/utils/__tests__/currencyFormatter.test.ts
-import { formatCOP } from '../currencyFormatter';
+import { formatCOP } from '@/utils/currencyFormater';
 
 describe('currencyFormatter - Formateador de moneda COP', () => {
   it('debe formatear números correctamente a formato Pesos Colombianos', () => {
