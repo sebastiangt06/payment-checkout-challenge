@@ -27,5 +27,10 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "tailwind.config.ts"]
+  "include": ["src", "tailwind.config.ts"],
+  "exclude": [
+    "src/__tests__",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }
