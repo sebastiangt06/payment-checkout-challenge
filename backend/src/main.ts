@@ -3,6 +3,7 @@ dotenv.config();
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -20,8 +21,19 @@ async function bootstrap() {
     }),
   );
 
+  // Configuración e inicialización de Swagger
+  const config = new DocumentBuilder()
+    .setTitle('Checkout API - Wompi Integration')
+    .setDescription('API Hexagonal para el procesamiento de compras y pagos con Wompi')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
   const port = process.env.PORT || 3001;
   await app.listen(port);
   console.log(`🚀 Servidor NestJS Hexagonal ejecutándose en el puerto ${port}`);
+  console.log(`📄 Documentación Swagger lista en: http://localhost:${port}/docs`);
 }
 bootstrap();
