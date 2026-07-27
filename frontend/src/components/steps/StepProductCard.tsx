@@ -8,6 +8,19 @@ import { selectProduct } from '../../store/slices/checkoutSlice';
 interface Props {
   product: Product;
 }
+/**
+ * Mapea el nombre del producto a la imagen local correspondiente.
+ */
+const getProductImage = (name: string): string => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('moto')) {
+    return '/images/products/moto.png';
+  }
+  if (normalized.includes('teclado')) {
+    return '/images/products/keyboard.png';
+  }
+  return '/images/products/default.png';
+};
 
 export const StepProductCard: React.FC<Props> = ({ product }) => {
   const dispatch = useAppDispatch();
@@ -29,17 +42,27 @@ export const StepProductCard: React.FC<Props> = ({ product }) => {
     }
   };
 
-  return (
-    <div className="w-full max-w-[375px] mx-auto bg-white rounded-2xl border border-slate-200 shadow-md p-5 flex flex-col justify-between transition-all">
+return (
+    <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between">
       <div>
-        {/* Imagen Placeholder o Ilustración del producto */}
-        <div className="w-full h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-100 relative">
-          <span className="text-4xl">📦</span>
+        {/* Contenedor de Imagen de Producto */}
+        <div className="w-full h-44 bg-slate-50 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-slate-100 relative p-2">
+          <img
+            src={getProductImage(product.name)}
+            alt={product.name}
+            className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              // Fallback visual si el archivo no se encuentra en public/images/products/
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+
+          {/* Badge de Stock */}
           <span
-            className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm ${
+            className={`absolute top-2 right-2 text-[10px] font-bold px-2.5 py-1 rounded-md shadow-sm backdrop-blur-sm ${
               isOutOfStock
-                ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                ? 'bg-rose-100/90 text-rose-700 border border-rose-200'
+                : 'bg-emerald-100/90 text-emerald-700 border border-emerald-200'
             }`}
           >
             {isOutOfStock ? 'Agotado' : `Stock: ${product.stock}`}
