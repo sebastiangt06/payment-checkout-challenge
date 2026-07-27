@@ -7,7 +7,9 @@ import { ProductOrmEntity } from './entities/product.orm-entity';
 import { randomUUID } from 'crypto';
 
 @Injectable()
-export class PostgresProductRepository implements ProductRepositoryPort, OnModuleInit {
+export class PostgresProductRepository
+  implements ProductRepositoryPort, OnModuleInit
+{
   constructor(
     @InjectRepository(ProductOrmEntity)
     private readonly repository: Repository<ProductOrmEntity>,
@@ -17,19 +19,23 @@ export class PostgresProductRepository implements ProductRepositoryPort, OnModul
   async onModuleInit(): Promise<void> {
     const count = await this.repository.count();
     if (count === 0) {
-      console.log('🌱 Base de datos vacía. Ejecutando sembrado de productos de prueba...');
+      console.log(
+        '🌱 Base de datos vacía. Ejecutando sembrado de productos de prueba...',
+      );
       const dummyProducts: ProductOrmEntity[] = [
         {
-          id: randomUUID(),
+          id: 'd7cf5e18-25cf-4f0a-9c85-e7da2ae0c0b8',
           name: 'CF MOTO 450NK Scale Model & Gear',
-          description: 'Modelo a escala oficial + Kit de mantenimiento técnico de alta precisión.',
+          description:
+            'Modelo a escala oficial + Kit de mantenimiento técnico de alta precisión.',
           price: 185000,
           stock: 5,
         },
         {
-          id: randomUUID(),
+          id: '377d6e55-4cad-408e-b8a4-5f8d330916ee',
           name: 'Teclado Mecánico RGB Pro',
-          description: 'Teclado mecánico switches red ideal para administración de infraestructura.',
+          description:
+            'Teclado mecánico switches red ideal para administración de infraestructura.',
           price: 240000,
           stock: 12,
         },
