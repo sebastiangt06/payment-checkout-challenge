@@ -18,6 +18,7 @@ export class PostgresTransactionRepository implements TransactionRepositoryPort 
       orm.id,
       orm.reference,
       orm.productId,
+      orm.quantity,
       orm.amount,
       orm.baseFee,
       orm.deliveryFee,
@@ -33,6 +34,7 @@ export class PostgresTransactionRepository implements TransactionRepositoryPort 
     orm.id = domain.id;
     orm.reference = domain.reference;
     orm.productId = domain.productId;
+    orm.quantity = domain.quantity;
     orm.amount = domain.amount;
     orm.baseFee = domain.baseFee;
     orm.deliveryFee = domain.deliveryFee;

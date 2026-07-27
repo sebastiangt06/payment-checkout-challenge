@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Result } from '@/shared/result';
-import {Transaction} from '@/domain/models/Transaction';
-import {CustomerData} from '@/domain/models/CustomerData';
-import {DeliveryData} from '@/domain/models/DeliveryData';
+import { Transaction } from '@/domain/models/Transaction';
+import { CustomerData } from '@/domain/models/CustomerData';
+import { DeliveryData } from '@/domain/models/DeliveryData';
 import {
   PRODUCT_REPOSITORY_PORT,
   ProductRepositoryPort,
@@ -13,6 +13,7 @@ import { randomUUID } from 'crypto';
 
 export interface CreateTransactionCommand {
   productId: string;
+  quantity?: number | undefined;
   customerData: CustomerData;
   deliveryData: DeliveryData;
 }
@@ -32,16 +33,28 @@ export class CreateTransactionUseCase {
     try {
       const product = await this.productRepo.findById(command.productId);
       if (!product) return Result.fail('Producto no encontrado.');
-      if (product.stock <= 0) return Result.fail('Producto sin stock disponible.');
 
-      const baseFee = 2500; // Tarifa base fija obligatoria según reglas[cite: 2]
+      const quantity = command.quantity || 1;
+
+      // 1. Validar si hay suficiente stock para la cantidad solicitada
+      if (product.stock < quantity) {
+        return Result.fail(
+          `Stock insuficiente. Solo quedan ${product.stock} unidades disponibles.`,
+        );
+      }
+
+      const baseFee = 2500; // Tarifa base fija[cite: 2]
       const deliveryFee = 10000; // Tarifa de envío[cite: 2]
+      
+      // 2. Calcular subtotal multiplicando precio unitario por cantidad
+      const productSubtotal = product.price * quantity;
 
       const transaction = new Transaction(
         randomUUID(),
         `TX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
         product.id,
-        product.price,
+        quantity,
+        productSubtotal, // Subtotal real de los productos
         baseFee,
         deliveryFee,
         'PENDING',

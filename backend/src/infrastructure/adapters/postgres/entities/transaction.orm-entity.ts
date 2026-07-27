@@ -11,6 +11,9 @@ export class TransactionOrmEntity {
   @Column('uuid')
   productId: string = '';
 
+  @Column({ type: 'int', default: 1 }) // <--- Nueva columna en PostgreSQL
+  quantity: number = 1;
+
   @Column({ type: 'int' })
   amount: number = 0;
 

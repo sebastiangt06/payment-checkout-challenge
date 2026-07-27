@@ -7,6 +7,7 @@ export class Transaction {
     public readonly id: string,
     public readonly reference: string,
     public readonly productId: string,
+    public readonly quantity : number,
     public readonly amount: number,
     public readonly baseFee: number,
     public readonly deliveryFee: number,
