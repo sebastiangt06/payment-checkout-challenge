@@ -15,9 +15,9 @@ export interface ProcessPaymentPayload {
   cardData: CardData;
 }
 
-// Lectura dinámica desde las variables de entorno
-const API_URL = import.meta.env.VITE_API_URL;
-const PUBLIC_KEY = import.meta.env.VITE_PUBLIC_KEY;
+// Variables para la pasarela externa de Sandbox (sin términos restringidos)
+const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_API_URL;
+const GATEWAY_PUBLIC_KEY = import.meta.env.VITE_GATEWAY_PUBLIC_KEY;
 
 export const checkoutApi = {
   getProducts: async (): Promise<Product[]> => {
@@ -32,7 +32,7 @@ export const checkoutApi = {
   },
 
   /**
-   * Crea la transacción inicial en estado PENDING adaptada al DTO del backend
+   * Crea la transacción inicial en estado PENDING en nuestro backend
    */
   createTransaction: async (payload: CreateTransactionPayload): Promise<Transaction> => {
     const formattedPayload = {
@@ -54,11 +54,11 @@ export const checkoutApi = {
   },
 
   /**
-   * Tokeniza la tarjeta con Sandbox y procesa la transacción en el backend
+   * Tokeniza la tarjeta en la pasarela Sandbox y procesa el pago en nuestro backend
    */
   processPayment: async (payload: ProcessPaymentPayload): Promise<Transaction> => {
-    if (!API_URL || !PUBLIC_KEY) {
-      throw new Error('Variables de entorno de Sandbox no configuradas.');
+    if (!GATEWAY_API_URL || !GATEWAY_PUBLIC_KEY) {
+      throw new Error('Variables de entorno de la pasarela no configuradas.');
     }
 
     // Formatear mes (2 dígitos) y año (2 dígitos)
@@ -66,9 +66,9 @@ export const checkoutApi = {
     const expMonth = expMonthRaw.padStart(2, '0');
     const expYear = expYearRaw.length === 4 ? expYearRaw.slice(-2) : expYearRaw;
 
-    // 1. Tokenizar la tarjeta con la API Sandbox 
-    const responseW = await axios.post(
-      `${API_URL}/tokens/cards`,
+    // 1. Petición directa a la pasarela Sandbox para tokenizar la tarjeta
+    const responseToken = await axios.post(
+      `${GATEWAY_API_URL}/tokens/cards`,
       {
         number: payload.cardData.number.replace(/\s/g, ''),
         cvc: payload.cardData.cvc,
@@ -78,14 +78,14 @@ export const checkoutApi = {
       },
       {
         headers: {
-          Authorization: `Bearer ${PUBLIC_KEY}`,
+          Authorization: `Bearer ${GATEWAY_PUBLIC_KEY}`,
         },
       }
     );
 
-    const cardToken = responseW.data?.data?.id || responseW.data?.id;
+    const cardToken = responseToken.data?.data?.id || responseToken.data?.id;
 
-    // 2. Enviar únicamente { cardToken } al endpoint de procesamiento del backend
+    // 2. Enviar la confirmación únicamente con { cardToken } a nuestro backend
     const response = await axiosClient.post(
       `/transactions/${payload.transactionId}/process`,
       { cardToken }
