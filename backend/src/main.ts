@@ -24,7 +24,7 @@ async function bootstrap() {
   // Configuración e inicialización de Swagger
   const config = new DocumentBuilder()
     .setTitle('Checkout API -  Integration')
-    .setDescription('API Hexagonal para el procesamiento de compras y pagos con Wompi')
+    .setDescription('API Hexagonal para el procesamiento de compras y pagos')
     .setVersion('1.0')
     .build();
 

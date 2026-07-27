@@ -81,3 +81,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Cobertura de pruebas
+coverage/
+.nyc_output/
