@@ -1,11 +1,12 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
-import { Header } from './components/common/Header';
+import { Header } from '@/components/common/Header';
 import { StepProductCard } from '@/components/steps/StepProductCard';
 import { StepCreditCardModal } from '@/components/steps/StepCreditCardModal';
 import { StepSummaryBackdrop } from '@/components/steps/StepSummaryBackdrop';
 import { useAppDispatch, useAppSelector } from './store';
-import { fetchProducts } from './store/slices/checkoutSlice';
+import { fetchProducts } from '@/store/slices/checkoutSlice';
+import { StepTransactionStatus } from '@/components/steps/StepTransactionStatus';
 
 export const App: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -52,6 +53,9 @@ export const App: React.FC = () => {
 
         {/* Paso 3: Resumen de Pago en Backdrop */}
         {step === 3 && <StepSummaryBackdrop />}
+
+        {/* Paso 4: Resultado de la Transacción */}
+        {step === 4 && <StepTransactionStatus />}
       </main>
     </div>
   );

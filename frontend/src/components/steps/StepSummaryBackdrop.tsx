@@ -39,7 +39,7 @@ export const StepSummaryBackdrop: React.FC = () => {
       ).unwrap();
 
       if (transactionAction?.id) {
-        // Paso B: Procesar la transacción enviando datos de tarjeta a Wompi Sandbox
+        // Paso B: Procesar la transacción enviando datos de tarjeta a Sandbox
         await dispatch(
           executePayment({
             transactionId: transactionAction.id,
@@ -120,7 +120,7 @@ export const StepSummaryBackdrop: React.FC = () => {
           {loadingPayment ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Procesando con Wompi...</span>
+              <span>Procesando con Sandbox...</span>
             </>
           ) : (
             <span>Confirmar y Pagar {formatCOP(grandTotal)}</span>

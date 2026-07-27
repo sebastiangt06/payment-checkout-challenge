@@ -78,7 +78,7 @@ describe('Step3SummaryBackdrop - Componente Resumen de Pago', () => {
     const store = createMockStore();
 
     mockedApi.createTransaction.mockResolvedValueOnce({
-      id: 'tx-wompi-001',
+      id: 'tx-001',
       status: 'PENDING',
       amountInCents: 19800000,
       reference: 'ref-001',
@@ -86,7 +86,7 @@ describe('Step3SummaryBackdrop - Componente Resumen de Pago', () => {
     });
 
     mockedApi.processPayment.mockResolvedValueOnce({
-      id: 'tx-wompi-001',
+      id: 'tx-001',
       status: 'APPROVED',
       amountInCents: 19800000,
       reference: 'ref-001',
@@ -105,7 +105,7 @@ describe('Step3SummaryBackdrop - Componente Resumen de Pago', () => {
     await waitFor(() => {
       expect(mockedApi.createTransaction).toHaveBeenCalledTimes(1);
       expect(mockedApi.processPayment).toHaveBeenCalledWith({
-        transactionId: 'tx-wompi-001',
+        transactionId: 'tx-001',
         cardData: expect.objectContaining({ number: '4000123456789010' }),
       });
     });

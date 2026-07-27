@@ -1,7 +1,7 @@
 // src/store/slices/checkoutSlice.ts
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { checkoutApi } from '../../api/checkoutApi';
 import type { Product, CustomerData, DeliveryData, CardData, TransactionStatus } from '../../types';
-import { checkoutApi, type CreateTransactionPayload, type ProcessPaymentPayload } from '../../api/checkoutApi';
 
 export interface CheckoutState {
   step: 1 | 2 | 3 | 4;
@@ -18,18 +18,18 @@ export interface CheckoutState {
   error: string | null;
 }
 
-export const LOCAL_STORAGE_KEY = 'wompi_checkout_state_v1';
+const LOCAL_KEY = 'checkout_state_v1';
 
 const loadSavedState = (): Partial<CheckoutState> => {
   try {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const saved = localStorage.getItem(LOCAL_KEY);
     return saved ? JSON.parse(saved) : {};
   } catch {
     return {};
   }
 };
 
-export const initialState: CheckoutState = {
+const initialState: CheckoutState = {
   step: 1,
   products: [],
   selectedProduct: null,
@@ -45,98 +45,73 @@ export const initialState: CheckoutState = {
   ...loadSavedState(),
 };
 
-const saveToLocalStorage = (state: CheckoutState) => {
-  try {
-    const { products, loadingProducts, loadingPayment, ...persistedState } = state;
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(persistedState));
-  } catch (error) {
-    console.error('Error al guardar en localStorage:', error);
-  }
-};
-
-// ─── ASYNC THUNKS ────────────────────────────────────────────────────────────
-
-export const fetchProducts = createAsyncThunk(
-  'checkout/fetchProducts',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await checkoutApi.getProducts();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener productos');
-    }
-  }
-);
+export const fetchProducts = createAsyncThunk('checkout/fetchProducts', async () => {
+  return await checkoutApi.getProducts();
+});
 
 export const submitTransaction = createAsyncThunk(
   'checkout/submitTransaction',
-  async (payload: CreateTransactionPayload, { rejectWithValue }) => {
-    try {
-      return await checkoutApi.createTransaction(payload);
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Error al crear la transacción');
-    }
+  async (
+    payload: {
+      productId: string;
+      quantity: number;
+      customerData: CustomerData;
+      deliveryData: DeliveryData;
+    },
+    _
+  ) => {
+    return await checkoutApi.createTransaction(payload);
   }
 );
 
 export const executePayment = createAsyncThunk(
   'checkout/executePayment',
-  async (payload: ProcessPaymentPayload, { rejectWithValue }) => {
-    try {
-      return await checkoutApi.processPayment(payload);
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Error al procesar el pago');
-    }
+  async (
+    payload: {
+      transactionId: string;
+      cardData: CardData;
+    },
+    _
+  ) => {
+    return await checkoutApi.processPayment(payload);
   }
 );
-
-// ─── SLICE DEFINITION ────────────────────────────────────────────────────────
 
 export const checkoutSlice = createSlice({
   name: 'checkout',
   initialState,
   reducers: {
-    selectProduct: (
-      state,
-      action: PayloadAction<{ product: Product; quantity: number }>
-    ) => {
+    selectProduct: (state, action: PayloadAction<{ product: Product; quantity: number }>) => {
       state.selectedProduct = action.payload.product;
       state.quantity = action.payload.quantity;
       state.step = 2;
-      saveToLocalStorage(state);
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
     },
-
     setFormData: (
       state,
-      action: PayloadAction<{
-        customer: CustomerData;
-        delivery: DeliveryData;
-        card: CardData;
-      }>
+      action: PayloadAction<{ customer: CustomerData; delivery: DeliveryData; card: CardData }>
     ) => {
       state.customerData = action.payload.customer;
       state.deliveryData = action.payload.delivery;
       state.cardData = action.payload.card;
       state.step = 3;
-      saveToLocalStorage(state);
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
     },
-
     resetFlow: (state) => {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      localStorage.removeItem(LOCAL_KEY);
       state.step = 1;
       state.selectedProduct = null;
-      state.quantity = 1;
       state.customerData = null;
       state.deliveryData = null;
       state.cardData = null;
       state.transactionId = null;
       state.transactionStatus = 'IDLE';
-      state.loadingPayment = false;
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // fetchProducts
+      // Fetch Products
       .addCase(fetchProducts.pending, (state) => {
         state.loadingProducts = true;
         state.error = null;
@@ -147,10 +122,9 @@ export const checkoutSlice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loadingProducts = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || 'Error al cargar productos desde la API';
       })
-
-      // submitTransaction
+      // Submit Transaction
       .addCase(submitTransaction.pending, (state) => {
         state.loadingPayment = true;
         state.error = null;
@@ -158,36 +132,26 @@ export const checkoutSlice = createSlice({
       .addCase(submitTransaction.fulfilled, (state, action) => {
         state.transactionId = action.payload.id;
         state.transactionStatus = 'PENDING';
-        saveToLocalStorage(state);
       })
-      .addCase(submitTransaction.rejected, (state, action) => {
-        state.loadingPayment = false;
-        state.transactionStatus = 'ERROR';
-        state.error = action.payload as string;
-        state.step = 4;
-        saveToLocalStorage(state);
-      })
-
-      // executePayment
+      // Execute Payment
       .addCase(executePayment.pending, (state) => {
         state.loadingPayment = true;
       })
       .addCase(executePayment.fulfilled, (state, action) => {
         state.loadingPayment = false;
-        state.transactionStatus = action.payload.status;
+        state.transactionStatus = action.payload.status === 'APPROVED' ? 'APPROVED' : 'DECLINED';
         state.step = 4;
-        saveToLocalStorage(state);
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
       })
       .addCase(executePayment.rejected, (state, action) => {
         state.loadingPayment = false;
         state.transactionStatus = 'DECLINED';
-        state.error = action.payload as string;
+        state.error = action.error.message || 'Error al procesar el pago';
         state.step = 4;
-        saveToLocalStorage(state);
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
       });
   },
 });
 
 export const { selectProduct, setFormData, resetFlow } = checkoutSlice.actions;
-
 export default checkoutSlice.reducer;
