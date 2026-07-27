@@ -32,7 +32,7 @@ export const checkoutApi = {
   },
 
   /**
-   * Procesa el pago llamando a la API de Wompi desde el backend
+   * Procesa el pago llamando a la API  desde el backend
    */
   processPayment: async (payload: ProcessPaymentPayload): Promise<Transaction> => {
     const response = await axiosClient.post<Transaction>(

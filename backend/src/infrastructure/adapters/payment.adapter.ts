@@ -23,7 +23,7 @@ export class PaymentAdapter implements PaymentGatewayPort {
       );
       return response.data.data.presigned_acceptance.acceptance_token;
     } catch (error) {
-      throw new Error('No se pudo obtener el token de aceptación de Wompi.');
+      throw new Error('No se pudo obtener el token de aceptación.');
     }
   }
 
@@ -62,7 +62,7 @@ export class PaymentAdapter implements PaymentGatewayPort {
 
       const txData = response.data.data;
 
-      // Devuelve la respuesta completa de Wompi para que el caso de uso lea el estado real ('APPROVED', 'DECLINED', etc.)
+      // Devuelve la respuesta completa  para que el caso de uso lea el estado real ('APPROVED', 'DECLINED', etc.)
       return Result.ok(txData);
     } catch (error: any) {
       // 1. Manejo dinámico para entorno de desarrollo / fallback local
@@ -76,7 +76,7 @@ export class PaymentAdapter implements PaymentGatewayPort {
         return Result.ok({ id: `sim-${Date.now()}`, status: 'APPROVED' });
       }
 
-      // 2. Errores HTTP reales de la API de Wompi
+      // 2. Errores HTTP reales de la API 
       const errorMessage =
         error.response?.data?.error?.messages?.card_number ||
         error.response?.data?.error?.reason ||

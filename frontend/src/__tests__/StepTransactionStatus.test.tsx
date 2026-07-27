@@ -30,7 +30,7 @@ const createMockStore = (status: 'APPROVED' | 'DECLINED') =>
         customerData: null,
         deliveryData: null,
         cardData: null,
-        transactionId: 'tx-wompi-888',
+        transactionId: 'tx-888',
         transactionStatus: status,
         loadingProducts: false,
         loadingPayment: false,
@@ -49,7 +49,7 @@ describe('Step4TransactionStatus - Resultado del Pago', () => {
     );
 
     expect(screen.getByText(/¡Pago Aprobado!/i)).toBeInTheDocument();
-    expect(screen.getByText('tx-wompi-888')).toBeInTheDocument();
+    expect(screen.getByText('tx-888')).toBeInTheDocument();
     expect(screen.getByText('APPROVED')).toBeInTheDocument();
   });
 

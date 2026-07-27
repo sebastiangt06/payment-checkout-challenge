@@ -10,7 +10,7 @@ export const Header: React.FC = () => {
             W
           </div>
           <span className="font-bold text-slate-800 text-base tracking-tight">
-            Wompi Store
+            Store
           </span>
         </div>
         <span className="text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full border border-indigo-100">

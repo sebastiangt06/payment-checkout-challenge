@@ -75,7 +75,7 @@ export const StepTransactionStatus: React.FC = () => {
         </div>
 
         <div className="flex justify-between items-center text-slate-600">
-          <span>Estado Wompi:</span>
+          <span>Estado:</span>
           <span
             className={`font-bold px-2 py-0.5 rounded text-[10px] ${
               isApproved

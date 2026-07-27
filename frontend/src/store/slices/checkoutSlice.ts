@@ -18,7 +18,7 @@ export interface CheckoutState {
   error: string | null;
 }
 
-const LOCAL_KEY = 'wompi_checkout_state_v1';
+const LOCAL_KEY = 'checkout_state_v1';
 
 const loadSavedState = (): Partial<CheckoutState> => {
   try {
@@ -146,7 +146,7 @@ export const checkoutSlice = createSlice({
       .addCase(executePayment.rejected, (state, action) => {
         state.loadingPayment = false;
         state.transactionStatus = 'DECLINED';
-        state.error = action.error.message || 'Error al procesar el pago con Wompi';
+        state.error = action.error.message || 'Error al procesar el pago';
         state.step = 4;
         localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
       });
