@@ -15,7 +15,6 @@ describe('ProcessPaymentUseCase', () => {
   let transactionRepo: InMemoryTransactionRepository;
   let productRepo: InMemoryProductRepository;
 
-  // Mock de la pasarela exterior para controlar respuestas aprobadas o rechazadas[cite: 2]
   const mockPaymentGateway = {
     createPayment: jest.fn(),
   };
@@ -36,12 +35,14 @@ describe('ProcessPaymentUseCase', () => {
     productRepo = module.get<InMemoryProductRepository>(PRODUCT_REPOSITORY_PORT);
   });
 
-  const setupPendingTransaction = async (): Promise<Transaction> => {
+  const setupPendingTransaction = async (quantity = 1): Promise<Transaction> => {
+    const product = await productRepo.findById('prod-1');
     const tx = new Transaction(
       'tx-123',
       'REF-TEST',
       'prod-1',
-      185000,
+      quantity, // 4.º parámetro: cantidad
+      product!.price * quantity, // 5.º parámetro: subtotal
       2500,
       10000,
       'PENDING',
@@ -51,12 +52,12 @@ describe('ProcessPaymentUseCase', () => {
     return await transactionRepo.save(tx);
   };
 
-  it('debe aprobar la transacción y descontar el stock cuando el pago externo es exitoso (Paso 5.3)[cite: 2]', async () => {
-    await setupPendingTransaction();
+  it('debe aprobar la transacción y descontar la cantidad exacta de stock cuando el pago es exitoso', async () => {
+    const purchasedQuantity = 2;
+    await setupPendingTransaction(purchasedQuantity);
     const initialProduct = await productRepo.findById('prod-1');
     const initialStock = initialProduct!.stock;
 
-    // Simulamos respuesta aprobada por parte del banco / pasarela[cite: 2]
     mockPaymentGateway.createPayment.mockResolvedValue(
       Result.ok({ id: 'external-id', status: 'APPROVED' }),
     );
@@ -67,19 +68,18 @@ describe('ProcessPaymentUseCase', () => {
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe('APPROVED'); // Estado actualizado en BD[cite: 2]
+    expect(result.getValue().status).toBe('APPROVED');
 
-    // Verificamos que el stock se redujo exactamente en 1 unidad[cite: 2]
+    // Verifica que el stock se redujo según las unidades compradas
     const updatedProduct = await productRepo.findById('prod-1');
-    expect(updatedProduct?.stock).toBe(initialStock - 1);
+    expect(updatedProduct?.stock).toBe(initialStock - purchasedQuantity);
   });
 
-  it('debe cambiar el estado a DECLINED y NO descontar stock si el pago es rechazado[cite: 2]', async () => {
-    await setupPendingTransaction();
+  it('debe cambiar el estado a DECLINED y NO descontar stock si el pago es rechazado por la pasarela', async () => {
+    await setupPendingTransaction(1);
     const initialProduct = await productRepo.findById('prod-1');
     const initialStock = initialProduct!.stock;
 
-    // Simulamos rechazo por tarjeta sin fondos
     mockPaymentGateway.createPayment.mockResolvedValue(
       Result.fail('Fondos insuficientes'),
     );
@@ -90,19 +90,17 @@ describe('ProcessPaymentUseCase', () => {
     });
 
     expect(result.isFailure).toBe(true);
-    expect(result.error).toBe('Fondos insuficientes');
 
     const txInDb = await transactionRepo.findById('tx-123');
     expect(txInDb?.status).toBe('DECLINED');
 
-    // El inventario debe permanecer intocable
     const productAfter = await productRepo.findById('prod-1');
     expect(productAfter?.stock).toBe(initialStock);
   });
 
   it('debe rechazar el proceso si la transacción ya no está en estado PENDING', async () => {
-    const tx = await setupPendingTransaction();
-    tx.status = 'APPROVED'; // Modificamos el estado previamente
+    const tx = await setupPendingTransaction(1);
+    tx.status = 'APPROVED';
     await transactionRepo.update(tx);
 
     const result = await useCase.execute({

@@ -3,6 +3,9 @@ import {
   IsEmail,
   IsNotEmpty,
   ValidateNested,
+  IsOptional,
+  IsNumber,
+  Min 
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -34,6 +37,11 @@ export class CreateTransactionDto {
   @IsString()
   @IsNotEmpty()
   productId: string = '';
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  quantity?: number = 1; // <--- Agregado para recibir del HTTP request
 
   @ValidateNested()
   @Type(() => CustomerDto)

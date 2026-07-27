@@ -52,16 +52,16 @@ export class ProcessPaymentUseCase {
         installments: command.installments || 1,
       });
 
-      if (paymentResult.isFailure) {
+      if (paymentResult.isFailure || paymentResult.getValue().status !== 'APPROVED') {
         transaction.status = 'DECLINED';
         await this.transactionRepo.update(transaction);
-        return Result.fail(paymentResult.error || 'Pago rechazado por el banco.');
+        return Result.fail(paymentResult.error || 'El pago no fue aprobado por el banco.');
       }
 
-      // 2. Si es exitoso, actualizar transacción y stock (Pasos 5.3.1 al 5.3.3)[cite: 2]
+      // Solo si paymentResult.getValue().status === 'APPROVED'
       transaction.status = 'APPROVED';
       await this.transactionRepo.update(transaction);
-      await this.productRepo.decrementStock(transaction.productId, 1);
+      await this.productRepo.decrementStock(transaction.productId, transaction.quantity || 1);
 
       return Result.ok(transaction);
     } catch (error: any) {
