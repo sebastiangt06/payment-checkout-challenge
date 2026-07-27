@@ -6,7 +6,7 @@ Aplicación web FullStack responsiva orientada a dispositivos móviles para el p
 
 ## 🔗 Enlaces del Proyecto
 
-* **Frontend Deployed (Vercel):** [https://tu-app-checkout.vercel.app](https://tu-app-checkout.vercel.app)
+* **Frontend Deployed (Vercel):** [https://payment-checkout-challenge.vercel.app/](https://payment-checkout-challenge.vercel.app/)
 * **Backend API (Render/AWS):** [https://payment-checkout-challenge-api.onrender.com/api/v1](https://payment-checkout-challenge-api.onrender.com/api/v1)
 * **Swagger API Docs:** [https://payment-checkout-challenge-api.onrender.com/docs](https://payment-checkout-challenge-api.onrender.com/docs)
 
