@@ -16,8 +16,8 @@ export interface ProcessPaymentPayload {
 }
 
 // Lectura dinámica desde las variables de entorno
-const WOMPI_API_URL = import.meta.env.VITE_WOMPI_API_URL;
-const WOMPI_PUBLIC_KEY = import.meta.env.VITE_WOMPI_PUBLIC_KEY;
+const API_URL = import.meta.env.VITE_API_URL;
+const PUBLIC_KEY = import.meta.env.VITE_PUBLIC_KEY;
 
 export const checkoutApi = {
   getProducts: async (): Promise<Product[]> => {
@@ -54,11 +54,11 @@ export const checkoutApi = {
   },
 
   /**
-   * Tokeniza la tarjeta con Wompi Sandbox y procesa la transacción en el backend
+   * Tokeniza la tarjeta con Sandbox y procesa la transacción en el backend
    */
   processPayment: async (payload: ProcessPaymentPayload): Promise<Transaction> => {
-    if (!WOMPI_API_URL || !WOMPI_PUBLIC_KEY) {
-      throw new Error('Variables de entorno de Wompi no configuradas.');
+    if (!API_URL || !PUBLIC_KEY) {
+      throw new Error('Variables de entorno de Sandbox no configuradas.');
     }
 
     // Formatear mes (2 dígitos) y año (2 dígitos)
@@ -66,9 +66,9 @@ export const checkoutApi = {
     const expMonth = expMonthRaw.padStart(2, '0');
     const expYear = expYearRaw.length === 4 ? expYearRaw.slice(-2) : expYearRaw;
 
-    // 1. Tokenizar la tarjeta con la API Sandbox de Wompi
-    const wompiResponse = await axios.post(
-      `${WOMPI_API_URL}/tokens/cards`,
+    // 1. Tokenizar la tarjeta con la API Sandbox 
+    const responseW = await axios.post(
+      `${API_URL}/tokens/cards`,
       {
         number: payload.cardData.number.replace(/\s/g, ''),
         cvc: payload.cardData.cvc,
@@ -78,12 +78,12 @@ export const checkoutApi = {
       },
       {
         headers: {
-          Authorization: `Bearer ${WOMPI_PUBLIC_KEY}`,
+          Authorization: `Bearer ${PUBLIC_KEY}`,
         },
       }
     );
 
-    const cardToken = wompiResponse.data?.data?.id || wompiResponse.data?.id;
+    const cardToken = responseW.data?.data?.id || responseW.data?.id;
 
     // 2. Enviar únicamente { cardToken } al endpoint de procesamiento del backend
     const response = await axiosClient.post(
