@@ -25,7 +25,10 @@ export const StepCreditCardModal: React.FC = () => {
   const [expDate, setExpDate] = useState(cardData?.expDate || "");
   const [cvc, setCvc] = useState(cardData?.cvc || "");
 
-  const [cardError, setCardError] = useState<string | null>(null);
+  // Errores de validación específicos e individuales
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
   const brand = detectCardBrand(cardNumber);
 
   // Auto-sincronización con Redux/localStorage mientras el usuario escribe
@@ -49,18 +52,52 @@ export const StepCreditCardModal: React.FC = () => {
     dispatch(closeModal());
   };
 
+  // --- VALIDACIÓN DE CORREO ELECTRÓNICO ---
+  const validateEmailFormat = (val: string): boolean => {
+    // Expresión regular estándar para comprobar usuario @ dominio . extensión
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(val.trim());
+  };
+
+  const handleEmailBlur = () => {
+    if (email && !validateEmailFormat(email)) {
+      setEmailError("Ingresa un correo válido con '@' y dominio (ej. usuario@dominio.com).");
+    } else {
+      setEmailError(null);
+    }
+  };
+
+  // --- CONTROLADORES CON FILTRO/SANITIZACIÓN EN TIEMPO REAL ---
+
+  // Solo letras, acentos y espacios
+  const handleOnlyLettersChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<string>>
+  ) => {
+    const clean = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+    setter(clean);
+  };
+
+  // Teléfono: Solo números y máx 10 dígitos
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const clean = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setPhone(clean);
+  };
+
+  // Número de Tarjeta: Solo números, máx 16, formateado en bloques de 4
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = e.target.value.replace(/\D/g, "").slice(0, 16);
     const formatted = clean.replace(/(\d{4})(?=\d)/g, "$1 ");
     setCardNumber(formatted);
 
     if (clean.length >= 13 && !validateLuhn(clean)) {
-      setCardError("Número de tarjeta inválido (Fallo Luhn)");
+      setFormError("Número de tarjeta inválido (Fallo algoritmo Luhn)");
     } else {
-      setCardError(null);
+      setFormError(null);
     }
   };
 
+  // Fecha MM/YY
   const handleExpDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const clean = e.target.value.replace(/\D/g, "").slice(0, 4);
     if (clean.length >= 3) {
@@ -70,14 +107,45 @@ export const StepCreditCardModal: React.FC = () => {
     }
   };
 
+  // --- VALIDACIÓN AL ENVIAR FORMULARIO ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const cleanCardNumber = cardNumber.replace(/\s/g, "");
-    if (!validateLuhn(cleanCardNumber)) {
-      setCardError("Verifica el número de tarjeta ingresado.");
+    // 1. Re-validación estricta de Email
+    if (!validateEmailFormat(email)) {
+      setEmailError("Ingresa un correo electrónico válido (ej. usuario@dominio.com).");
+      setFormError("El correo electrónico ingresado no es válido.");
       return;
     }
+
+    // 2. Validar Teléfono (mínimo 7 dígitos)
+    if (phone.length < 7) {
+      setFormError("Ingresa un número de teléfono válido (mínimo 7 dígitos).");
+      return;
+    }
+
+    // 3. Validar Tarjeta mediante algoritmo de Luhn
+    const cleanCardNumber = cardNumber.replace(/\s/g, "");
+    if (!validateLuhn(cleanCardNumber)) {
+      setFormError("Verifica el número de tarjeta. No superó la validación Luhn.");
+      return;
+    }
+
+    // 4. Validar Expiración
+    if (expDate.length < 5) {
+      setFormError("La fecha de expiración debe tener el formato MM/YY.");
+      return;
+    }
+
+    const [monthStr] = expDate.split('/');
+    const month = parseInt(monthStr, 10);
+    if (month < 1 || month > 12) {
+      setFormError("El mes de expiración debe estar entre 01 y 12.");
+      return;
+    }
+
+    setFormError(null);
+    setEmailError(null);
 
     const customer: CustomerData = { fullName, email, phone };
     const delivery: DeliveryData = { address, city, region };
@@ -124,36 +192,63 @@ export const StepCreditCardModal: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {formError && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-xl font-medium">
+              {formError}
+            </div>
+          )}
+
+          {/* 1. Cliente */}
           <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
             1. Cliente
           </div>
           <input
             required
             type="text"
-            placeholder="Nombre completo"
+            placeholder="Nombre completo (solo letras)"
             value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            onChange={(e) => handleOnlyLettersChange(e, setFullName)}
             className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
+
           <div className="grid grid-cols-2 gap-2">
-            <input
-              required
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <input
-              required
-              type="tel"
-              placeholder="Teléfono"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
+            <div>
+              <input
+                required
+                type="text"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(null);
+                }}
+                onBlur={handleEmailBlur}
+                className={`w-full p-2.5 border rounded-xl text-xs focus:ring-2 focus:outline-none ${
+                  emailError
+                    ? "border-rose-500 focus:ring-rose-500 bg-rose-50/30"
+                    : "border-slate-300 focus:ring-indigo-500"
+                }`}
+              />
+              {emailError && (
+                <p className="text-[9px] text-rose-600 font-semibold mt-1">
+                  {emailError}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <input
+                required
+                type="tel"
+                placeholder="Teléfono (solo números)"
+                value={phone}
+                onChange={handlePhoneChange}
+                className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+            </div>
           </div>
 
+          {/* 2. Dirección de Despacho */}
           <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider pt-2">
             2. Dirección de Despacho
           </div>
@@ -169,21 +264,22 @@ export const StepCreditCardModal: React.FC = () => {
             <input
               required
               type="text"
-              placeholder="Ciudad"
+              placeholder="Ciudad (solo letras)"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => handleOnlyLettersChange(e, setCity)}
               className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <input
               required
               type="text"
-              placeholder="Departamento"
+              placeholder="Departamento (solo letras)"
               value={region}
-              onChange={(e) => setRegion(e.target.value)}
+              onChange={(e) => handleOnlyLettersChange(e, setRegion)}
               className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
+          {/* 3. Datos de Tarjeta */}
           <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider pt-2">
             3. Tarjeta de Crédito (Sandbox)
           </div>
@@ -209,15 +305,13 @@ export const StepCreditCardModal: React.FC = () => {
               )}
             </div>
           </div>
-          {cardError && (
-            <p className="text-[10px] text-rose-600 font-semibold">{cardError}</p>
-          )}
+
           <input
             required
             type="text"
-            placeholder="Nombre en la tarjeta"
+            placeholder="Nombre en la tarjeta (solo letras)"
             value={cardHolder}
-            onChange={(e) => setCardHolder(e.target.value)}
+            onChange={(e) => handleOnlyLettersChange(e, setCardHolder)}
             className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
           <div className="grid grid-cols-2 gap-2">
@@ -240,6 +334,7 @@ export const StepCreditCardModal: React.FC = () => {
               className="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
+
           <button
             type="submit"
             className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md text-xs uppercase tracking-wide transition-all active:scale-[0.98]"
